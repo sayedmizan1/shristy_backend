@@ -9,6 +9,7 @@ import multer from "multer";
 import sharp from "sharp";
 import { z } from "zod";
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -801,24 +802,30 @@ app.put("/api/admin/settings", requireAdministrator, requireCsrf, (request, resp
   }
 });
 
-app.use(
-  express.static(frontendDirectory, {
-    etag: true,
-    index: "index.html",
-    maxAge: 0,
-    setHeaders: (response) => {
-      response.setHeader("Cache-Control", "no-store");
-    }
-  })
-);
+if (existsSync(frontendDirectory)) {
+  app.use(
+    express.static(frontendDirectory, {
+      etag: true,
+      index: "index.html",
+      maxAge: 0,
+      setHeaders: (response) => {
+        response.setHeader("Cache-Control", "no-store");
+      }
+    })
+  );
 
-app.use((request, response, next) => {
-  if (request.method === "GET" && !request.path.startsWith("/api") && !request.path.startsWith("/media")) {
-    response.sendFile(join(frontendDirectory, "index.html"));
-    return;
-  }
-  next();
-});
+  app.use((request, response, next) => {
+    if (request.method === "GET" && !request.path.startsWith("/api") && !request.path.startsWith("/media")) {
+      response.sendFile(join(frontendDirectory, "index.html"));
+      return;
+    }
+    next();
+  });
+} else {
+  app.get("/", (request, response) => {
+    response.json({ message: "Shrishti Organic API is running." });
+  });
+}
 
 app.use((request, response) => {
   response.status(404).json({ error: "Not found." });
