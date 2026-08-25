@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+
+node_modules/
+*.log
+
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+
+uploads/*
+!uploads/.gitkeep
